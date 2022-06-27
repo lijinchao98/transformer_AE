@@ -1,5 +1,6 @@
 import torch.nn as nn
 import torch
+from data.dataset import HSI_Loader
 from parts import *
 
 
@@ -25,6 +26,7 @@ class Encoder(nn.Module):
         self.src_emb = Embedding(d_model)
         self.pos_emb = PositionalEncoding(d_model)
         self.layers = nn.ModuleList([EncoderLayer() for _ in range(n_layers)])
+        self.toAB = ToAB()
 
     def forward(self, enc_inputs):
         '''
@@ -37,7 +39,18 @@ class Encoder(nn.Module):
             # enc_outputs: [batch_size, src_len, d_model], enc_self_attn: [batch_size, n_heads, src_len, src_len]
             enc_outputs, enc_self_attn = layer(enc_outputs)
             enc_self_attns.append(enc_self_attn)
+        enc_outputs = self.toAB(enc_outputs)
         return enc_outputs, enc_self_attns
+
+def Decoder(encode_out):
+
+    a = encode_out[:,:,0]
+    b = encode_out[:,:,1]
+    u = b / (a + b)
+    r = (0.084 + 0.170 * u) * u
+    r = torch.squeeze(r)
+
+    return r
 
 
 if __name__ == '__main__':
@@ -49,23 +62,10 @@ if __name__ == '__main__':
 
     # 将网络拷贝到deivce中
     net.to(device=device)
-
-    # 指定训练集地址，开始训练
-    # HSI_dataset = dataset.HSI_Loader('../data/all_curve.npy')
-    # train_loader = torch.utils.data.DataLoader(dataset=HSI_dataset,
-    #                                            batch_size=1024,
-    #                                            shuffle=True)
-    # batch_size = 1024
-    # for curve, label in train_loader:
-    #     # 将数据拷贝到device中
-    #     curve = curve.reshape(batch_size, 1, -1).to(device=device, dtype=torch.float32)
-    #     label = label.to(device=device, dtype=torch.float32)
-    #     break
-    # print(curve.shape)
-    # break
-    # 使用网络参数，输出预测结果
-    x = torch.rand(2, 176).to(device=device)
+    x = torch.rand(32, 176).to(device=device)
     encode_curve = net(x)
-
-    print(encode_curve[0].size())
+    print(f'Encoder结果：{encode_curve[0].size()}')
     print(len(encode_curve[1]), encode_curve[1][0].size())
+    out = Decoder(encode_curve[0])
+    print(f'Decoder结果：{out.size()}')
+

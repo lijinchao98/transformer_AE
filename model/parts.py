@@ -3,6 +3,7 @@ import numpy as np
 import torch.nn as nn
 import math
 
+
 d_model = 176  # Embedding Size
 d_ff = 704 # FeedForward dimension
 d_k = d_v = 22  # dimension of K(=Q), V
@@ -28,7 +29,6 @@ class Embedding(nn.Module):
             embed = torch.cat((embed, tmp), dim=0)
         embed = embed[1:] # [batch_size, seq_len, seq_len]
         return embed
-
 
 class PositionalEncoding(nn.Module):
 
@@ -113,6 +113,25 @@ class PoswiseFeedForwardNet(nn.Module):
         output = self.fc(inputs)
         # return nn.LayerNorm(d_model).cuda()(output + residual) # [batch_size, seq_len, d_model]
         return nn.LayerNorm(d_model)(output + residual) # [batch_size, seq_len, d_model]
+
+class ToAB(nn.Module):
+
+    def __init__(self):
+        super(ToAB, self).__init__()
+        self.fc = nn.Sequential(
+            nn.Linear(d_model, 64, bias=False),
+            nn.ReLU(),
+            nn.Linear(64, 2, bias=False),
+            nn.Sigmoid()
+        )
+
+    def forward(self, inputs):
+        '''
+        inputs: [batch_size, seq_len, d_model]
+        '''
+        output = self.fc(inputs)
+        # return nn.LayerNorm(d_model).cuda()(output + residual) # [batch_size, seq_len, d_model]
+        return output  # [batch_size, seq_len, 2]
 
 class EncoderLayer(nn.Module):
     def __init__(self):

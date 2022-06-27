@@ -3,6 +3,32 @@ import numpy as np
 import torch.nn as nn
 import math
 
+d_model = 176  # Embedding Size
+d_ff = 704 # FeedForward dimension
+d_k = d_v = 22  # dimension of K(=Q), V
+n_layers = 6  # number of Encoder of Decoder Layer
+n_heads = 8  # number of heads in Multi-Head Attention
+device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+
+class Embedding(nn.Module):
+
+    def __init__(self, d_model):
+        super(Embedding, self).__init__()
+
+    def forward(self, x):
+
+        '''
+        input: [batch_size, seq_len]
+        out: [seq_len, batch_size, d_model]
+        '''
+        batch_len = x.size()[0]
+        embed = torch.zeros(1, 176, 176)
+        for i in range(batch_len):
+            tmp = x[i] * torch.eye(d_model).unsqueeze(0)
+            embed = torch.cat((embed, tmp), dim=0)
+        embed = embed[1:] # [batch_size, seq_len, seq_len]
+        return embed
+
 
 class PositionalEncoding(nn.Module):
 
@@ -24,7 +50,6 @@ class PositionalEncoding(nn.Module):
         '''
         x = x + self.pe[:x.size(0), :]
         return self.dropout(x)
-
 
 class ScaledDotProductAttention(nn.Module):
     def __init__(self):
@@ -67,7 +92,8 @@ class MultiHeadAttention(nn.Module):
         context, attn = ScaledDotProductAttention()(Q, K, V)
         context = context.transpose(1, 2).reshape(batch_size, -1, n_heads * d_v) # context: [batch_size, len_q, n_heads * d_v]
         output = self.fc(context) # [batch_size, len_q, d_model]
-        return nn.LayerNorm(d_model).cuda()(output + residual), attn
+        return nn.LayerNorm(d_model)(output + residual), attn
+        # return nn.LayerNorm(d_model).cuda()(output + residual), attn
 
 class PoswiseFeedForwardNet(nn.Module):
 
@@ -85,7 +111,8 @@ class PoswiseFeedForwardNet(nn.Module):
         '''
         residual = inputs
         output = self.fc(inputs)
-        return nn.LayerNorm(d_model).cuda()(output + residual) # [batch_size, seq_len, d_model]
+        # return nn.LayerNorm(d_model).cuda()(output + residual) # [batch_size, seq_len, d_model]
+        return nn.LayerNorm(d_model)(output + residual) # [batch_size, seq_len, d_model]
 
 class EncoderLayer(nn.Module):
     def __init__(self):

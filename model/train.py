@@ -3,15 +3,16 @@ from data.dataset import HSI_Loader
 from torch import optim
 import torch.nn as nn
 import torch
+import math
 
-def train_net(net, device, datapath, epochs=500, batch_size=2, lr=0.00001):
+def train_net(net, device, datapath, epochs=1500, batch_size=256, lr=0.00001):
     # 加载训练集
     HSI_dataset = HSI_Loader(datapath)
     train_loader = torch.utils.data.DataLoader(dataset=HSI_dataset,
                                                batch_size=batch_size,
                                                shuffle=True)
-    # 定义RMSprop算法
-    optimizer = optim.RMSprop(net.parameters(), lr=lr, weight_decay=0, momentum=0.9)
+    # 定义Adam算法
+    optimizer = optim.Adam(net.parameters(), lr=lr, betas=(0.9, 0.999), eps=1e-08, weight_decay=0, amsgrad=False)
     # 定义loss
     criterion = nn.MSELoss()
     # best_loss统计，初始化为正无穷
@@ -46,7 +47,7 @@ def train_net(net, device, datapath, epochs=500, batch_size=2, lr=0.00001):
                 return SALoss
             # 计算loss
             # mseloss的量级为4e-8,所以乘e7,但是会不会一开始太大
-            loss = 1e7*criterion(r, label)
+            loss = 1e7*criterion(r, label) + SALoss(r, label)
             # 保存loss值最小的网络参数
             if loss < best_loss:
                 best_loss = loss

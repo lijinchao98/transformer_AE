@@ -23,9 +23,9 @@ class Embedding(nn.Module):
         out: [seq_len, batch_size, d_model]
         '''
         batch_len = x.size()[0]
-        embed = torch.zeros(1, 176, 176)
+        embed = torch.zeros(1, 176, 176).to(device=device)
         for i in range(batch_len):
-            tmp = x[i] * torch.eye(d_model).unsqueeze(0)
+            tmp = x[i] * torch.eye(d_model).unsqueeze(0).to(device=device)
             embed = torch.cat((embed, tmp), dim=0)
         embed = embed[1:] # [batch_size, seq_len, seq_len]
         return embed
@@ -92,7 +92,7 @@ class MultiHeadAttention(nn.Module):
         context, attn = ScaledDotProductAttention()(Q, K, V)
         context = context.transpose(1, 2).reshape(batch_size, -1, n_heads * d_v) # context: [batch_size, len_q, n_heads * d_v]
         output = self.fc(context) # [batch_size, len_q, d_model]
-        return nn.LayerNorm(d_model)(output + residual), attn
+        return nn.LayerNorm(d_model).to(device=device)(output + residual), attn
         # return nn.LayerNorm(d_model).cuda()(output + residual), attn
 
 class PoswiseFeedForwardNet(nn.Module):
@@ -112,7 +112,7 @@ class PoswiseFeedForwardNet(nn.Module):
         residual = inputs
         output = self.fc(inputs)
         # return nn.LayerNorm(d_model).cuda()(output + residual) # [batch_size, seq_len, d_model]
-        return nn.LayerNorm(d_model)(output + residual) # [batch_size, seq_len, d_model]
+        return nn.LayerNorm(d_model).to(device=device)(output + residual) # [batch_size, seq_len, d_model]
 
 class ToAB(nn.Module):
 

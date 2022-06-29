@@ -5,7 +5,7 @@ import torch.nn as nn
 import torch
 import math
 
-def train_net(net, device, datapath, epochs=1500, batch_size=256, lr=0.00001):
+def train_net(net, device, datapath, epochs=1500, batch_size=400, lr=0.0001):
     # 加载训练集
     HSI_dataset = HSI_Loader(datapath)
     train_loader = torch.utils.data.DataLoader(dataset=HSI_dataset,

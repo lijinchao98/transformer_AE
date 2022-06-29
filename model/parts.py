@@ -100,9 +100,9 @@ class PoswiseFeedForwardNet(nn.Module):
     def __init__(self):
         super(PoswiseFeedForwardNet, self).__init__()
         self.fc = nn.Sequential(
-            nn.Linear(d_model, d_ff, bias=False),
+            nn.Linear(d_model, d_ff, bias=True),
             nn.ReLU(),
-            nn.Linear(d_ff, d_model, bias=False)
+            nn.Linear(d_ff, d_model, bias=True)
         )
 
     def forward(self, inputs):
@@ -119,9 +119,13 @@ class ToAB(nn.Module):
     def __init__(self):
         super(ToAB, self).__init__()
         self.fc = nn.Sequential(
-            nn.Linear(d_model, 64, bias=False),
+            nn.Linear(d_model, 64, bias=True),
             nn.ReLU(),
-            nn.Linear(64, 2, bias=False),
+            nn.Linear(64, 32, bias=True),
+            nn.ReLU(),
+            nn.Linear(32, 16, bias=True),
+            nn.ReLU(),
+            nn.Linear(16, 2, bias=True),
             nn.Sigmoid()
         )
 

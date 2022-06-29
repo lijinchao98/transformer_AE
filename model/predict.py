@@ -6,7 +6,7 @@ import torch
 import math
 import matplotlib.pyplot as plt
 
-def predict_net(net, device, datapath, batch_size=128):
+def predict_net(net, device, datapath, batch_size=256):
     # 加载训练集
     HSI_dataset = HSI_Loader(datapath)
     train_loader = torch.utils.data.DataLoader(dataset=HSI_dataset,
@@ -59,7 +59,7 @@ def predict_net(net, device, datapath, batch_size=128):
                           924.50,928.10,931.80,935.50,939.10,942.80,946.50,950.20,953.80,957.50,961.20,
                           964.90,968.60,972.30,976.00,979.70,983.40,987.10,990.80,994.50,998.20,1002.00]
         # 重构曲线和真实曲线
-        pltcurve = 8  # 要看哪条曲线
+        pltcurve = 32  # 要看哪条曲线
         plt.figure()
         plt.plot(wavelength, torch.squeeze(r[pltcurve, :]).detach().cpu().numpy(),
                  label='reconstruct', color='r', marker='o', markersize=3)
